@@ -1,70 +1,86 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Pozadina from "../assets/pozadina.png";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-const testDestinations = [
-  {
-    id: 1,
-    city: "Pariz",
-    country: "Francuska",
-    continent: "Europe",
-    price: "250 KM",
-    image: "https://images.pexels.com/photos/1530259/pexels-photo-1530259.jpeg?auto=compress&cs=tinysrgb&w=600",
-  },
-  {
-    id: 2,
-    city: "London",
-    country: "Velika Britanija",
-    continent: "Europe",
-    price: "300 KM",
-    image: "https://example.com/london.jpg",
-  },
-  {
-    id: 3,
-    city: "Pariz",
-    country: "Francuska",
-    continent: "Europe",
-    price: "250 KM",
-    image: "https://images.pexels.com/photos/1530259/pexels-photo-1530259.jpeg?auto=compress&cs=tinysrgb&w=600",
-  },
-  {
-    id: 4,
-    city: "London",
-    country: "Velika Britanija",
-    continent: "Europe",
-    price: "300 KM",
-    image: "https://example.com/london.jpg",
-  },
-  {
-    id: 5,
-    city: "New York",
-    country: "SAD",
-    continent: "North America",
-    price: "500 KM",
-    image: "https://example.com/newyork.jpg",
-  },
-  {
-    id: 6,
-    city: "Tokyo",
-    country: "Japan",
-    continent: "Asia",
-    price: "450 KM",
-    image: "https://example.com/tokyo.jpg",
-  },
-
-];
-
-const continents = ["All", "Africa", "Asia", "Europe", "North America", "Oceania", "South America"];
+const continents = ["All", "Europe", "Asia", "Africa", "North America", "South America", "Oceania"];
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
   const [selectedContinent, setSelectedContinent] = useState("All");
+  const [destinations, setDestinations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchDestinations = async () => {
+      try {
+        const url = selectedContinent === "All" 
+          ? 'http://localhost:5000/api/v1/destinations?featured=true'
+          : `http://localhost:5000/api/v1/destinations?featured=true&continent=${selectedContinent}`;
+        
+        const response = await axios.get(url);
+        
+        if (response.data?.status === "success") {
+          setDestinations(response.data.data.destinations);
+        } else {
+          throw new Error("Invalid data format");
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setError(err.response?.data?.message || err.message || "Failed to fetch destinations");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDestinations();
+  }, [selectedContinent]);
 
   const scrollLeft = () => scrollRef.current?.scrollBy({ left: -200, behavior: "smooth" });
   const scrollRight = () => scrollRef.current?.scrollBy({ left: 200, behavior: "smooth" });
 
-  const filteredDestinations = selectedContinent === "All" ? testDestinations : testDestinations.filter((destination) => destination.continent === selectedContinent);
+  if (loading) {
+    return (
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center", 
+        height: "100vh" 
+      }}>
+        <p>Loading destinations...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center", 
+        height: "100vh",
+        flexDirection: "column",
+        width: "100%"
+      }}>
+        <p style={{ color: "red", marginBottom: "20px" }}>{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          style={{
+            padding: "10px 20px",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer"
+          }}
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ 
@@ -92,25 +108,46 @@ const LandingPage = () => {
           backgroundColor: "rgba(0, 0, 0, 0.5)"
         }}></div>
 
-        <h1 style={{ fontSize: "4rem", fontWeight: "bold", zIndex: 1 }}>N O M A D</h1>
-        <p style={{ fontSize: "1.5rem", zIndex: 1 }}>Travel with us</p>
+        <h1 style={{ 
+          fontSize: "4rem", 
+          fontWeight: "bold", 
+          zIndex: 1
+        }}>
+          N O M A D
+        </h1>
+        <p style={{ 
+          fontSize: "1.5rem", 
+          zIndex: 1,
+          marginTop: -30
+        }}>
+          Travel with us
+        </p>
       </div>
 
-    
-      <div style={{ display: "flex", justifyContent: "center", gap: "20px", padding: "20px", backgroundColor: "#f8f8f8", borderBottom: "2px solid #ddd" }}>
-        {continents.map((tab, index) => (
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "center",
+        gap: "20px", 
+        padding: "20px", 
+        backgroundColor: "#f8f8f8", 
+        borderBottom: "2px solid #ddd"
+      }}>
+        {continents.map((continent) => (
           <button
-            key={index}
-            onClick={() => setSelectedContinent(tab)}
+            key={continent}
+            onClick={() => setSelectedContinent(continent)}
             style={{
-              padding: "10px 15px", border: "none",
-              backgroundColor: selectedContinent === tab ? "#007bff" : "white",
-              color: selectedContinent === tab ? "white" : "black",
-              cursor: "pointer", fontWeight: "bold",
-              borderRadius: "5px"
+              padding: "10px 15px",
+              border: "none",
+              backgroundColor: selectedContinent === continent ? "#007bff" : "white",
+              color: selectedContinent === continent ? "white" : "black",
+              cursor: "pointer",
+              fontWeight: "bold",
+              borderRadius: "5px",
+              minWidth: "120px"
             }}
           >
-            {tab}
+            {continent}
           </button>
         ))}
       </div>
@@ -133,7 +170,8 @@ const LandingPage = () => {
             border: "none",
             padding: "10px",
             cursor: "pointer",
-            borderRadius: "5px"
+            borderRadius: "5px",
+            zIndex: 10
           }}
         >
           ◀
@@ -146,87 +184,107 @@ const LandingPage = () => {
           whiteSpace: "nowrap",
           scrollBehavior: "smooth"
         }}>
-          {filteredDestinations.length === 0 ? (
-            <p style={{
+          {destinations.length === 0 ? (
+            <div style={{ 
+              width: "100%", 
               textAlign: "center",
-              width: "100%",
-              fontSize: "1.5rem",
-              color: "#666"
+              padding: "40px"
             }}>
-              No destinations available for the selected continent. Explore other regions!
-            </p>
-          ) : (
-            filteredDestinations.map((destination) => (
-              <div key={destination.id} style={{
-                minWidth: "250px",
-                padding: "15px",
-                backgroundColor: "#eee",
-                textAlign: "center",
-                borderRadius: "10px",
-                boxShadow: "2px 2px 10px rgba(0,0,0,0.1)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center"
+              <p style={{ 
+                fontSize: "1.2rem", 
+                color: "#666",
+                marginBottom: "20px"
               }}>
-                <div style={{
-                  width: "100%",
-                  height: "300px"
+                No destinations found for {selectedContinent}
+              </p>
+              <button 
+                onClick={() => setSelectedContinent("All")}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#007bff",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer"
+                }}
+              >
+                Show All Destinations
+              </button>
+            </div>
+          ) : (
+            destinations.map((destination) => (
+              <div 
+                key={destination.id} 
+                style={{
+                  flex: "0 0 auto",
+                  width: "300px",
+                  padding: "15px",
+                  backgroundColor: "#fff",
+                  borderRadius: "10px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  display: "flex",
+                  flexDirection: "column",
+                  transition: "transform 0.3s",
+                  ":hover": {
+                    transform: "translateY(-5px)"
+                  }
+                }}
+                onClick={() => navigate(`/details/${destination.id}`)}
+              >
+                <div style={{ 
+                  height: "200px",
+                  overflow: "hidden",
+                  borderRadius: "8px",
+                  marginBottom: "15px"
                 }}>
                   <img 
-                    src={destination.image} 
-                    alt={destination.city} 
+                    src={destination.primary_image || "https://via.placeholder.com/300x200?text=No+Image"} 
+                    alt={destination.name}
                     style={{ 
                       width: "100%",
-                      height: "300px", 
-                      objectFit: "cover", 
-                      borderRadius: "10px" 
-                    }} 
+                      height: "100%",
+                      objectFit: "cover"
+                    }}
                   />
                 </div>
-                <div style={{
+                <h3 style={{ 
+                  margin: "0 0 5px 0",
+                  fontSize: "1.2rem",
+                  fontWeight: "bold"
+                }}>
+                  {destination.name}
+                </h3>
+                <p style={{ 
+                  color: "#666",
+                  margin: "0 0 10px 0",
+                  fontSize: "0.9rem"
+                }}>
+                  {destination.city}, {destination.country}
+                </p>
+                <div style={{ 
                   display: "flex",
                   justifyContent: "space-between",
-                  width: "100%",
+                  alignItems: "center",
+                  marginTop: "auto"
                 }}>
-                  <div style={{
-                    textAlign: "left",
-                    flex: 1
+                  <span style={{ 
+                    fontWeight: "bold",
+                    fontSize: "1.1rem"
                   }}>
-                    <h3>{destination.city}</h3>
-                    <p style={{ 
-                      color: "#666",
-                      fontSize: "0.9rem",
-                      marginTop: "-20px"
-                    }}>
-                      {destination.country}
-                    </p>
-                  </div>
-                  <div style={{
-                    textAlign: "right",
-                    flex: 1
-                  }}>
-                    <p style={{
-                      fontWeight: "bold",
-                      fontSize: "1.3rem",
-                      marginTop: "20px"
-                    }}>
-                      {destination.price}
-                    </p>
-                    <button 
-                      onClick={() => navigate(`/details/${destination.id}`)}
-                      style={{
-                        marginTop: "0px",
-                        padding: "10px 20px",
-                        border: "none",
-                        backgroundColor: "#007bff",
-                        color: "white",
-                        cursor: "pointer",
-                        fontWeight: "bold",
-                        borderRadius: "5px"
-                      }}>
-                      More
-                    </button>
-                  </div>
+                    {destination.price} KM
+                  </span>
+                  <button 
+                    style={{
+                      padding: "8px 16px",
+                      backgroundColor: "#007bff",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "5px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    View Details
+                  </button>
                 </div>
               </div>
             ))
@@ -245,51 +303,66 @@ const LandingPage = () => {
             border: "none",
             padding: "10px",
             cursor: "pointer",
-            borderRadius: "5px"
+            borderRadius: "5px",
+            zIndex: 10
           }}
         >
           ▶
         </button>
       </div>
 
+      
       <div style={{
         textAlign: "center",
         padding: "40px",
         backgroundColor: "#f8f8f8"
       }}>
-        <h2>Contact Us</h2>
-        <div>
-          <div>
-            <textarea 
-            placeholder="Your e-mail..." 
-            style={{ width: "30%", height: "15px", padding: "10px", marginTop: "10px" }}
-          ></textarea>
-          </div>
-          <div>
-            <textarea 
-            placeholder="Your message..." 
-            style={{ width: "50%", height: "90px", padding: "10px", marginTop: "10px" }}
-          ></textarea>
-          </div>
+        <h2 style={{ marginBottom: "20px" }}>Contact Us</h2>
+        <div style={{ 
+          maxWidth: "600px", 
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: "15px"
+        }}>
+          <input
+            type="email"
+            placeholder="Your email..."
+            style={{
+              padding: "12px",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+              fontSize: "1rem"
+            }}
+          />
+          <textarea
+            placeholder="Your message..."
+            style={{
+              padding: "12px",
+              border: "1px solid #ddd",
+              borderRadius: "4px",
+              fontSize: "1rem",
+              height: "120px",
+              resize: "vertical"
+            }}
+          />
+          <button
+            style={{
+              padding: "12px",
+              backgroundColor: "#007bff",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "1rem"
+            }}
+          >
+            Send Message
+          </button>
         </div>
-        <br />
-        <button 
-          style={{
-            marginTop: "10px",
-            padding: "10px 20px",
-            border: "none",
-            backgroundColor: "#007bff",
-            color: "white",
-            cursor: "pointer",
-            fontWeight: "bold"
-          }}
-        >
-          Send
-        </button>
       </div>
-
     </div>
   );
-}
+};
 
 export default LandingPage;

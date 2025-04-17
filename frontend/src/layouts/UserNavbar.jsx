@@ -5,6 +5,7 @@ const UserNavbar = () => {
   return (
     <nav style={{
       display: "flex",
+      maxWidth: "100%",
       alignItems: "center",
       justifyContent: "space-between",
       padding: "10px 20px",

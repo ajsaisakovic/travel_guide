@@ -8,11 +8,10 @@ import { protect, restrictTo } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router
-  .route('/')
-  .get(getAllDestinations)
-  .post(protect, restrictTo('admin'), createDestination);
+router.get('/', getAllDestinations);
+router.get('/:id', getDestination);
 
-router.route('/:id').get(getDestination);
+router.use(protect, restrictTo('admin'));
+router.post('/', createDestination);
 
 export default router;

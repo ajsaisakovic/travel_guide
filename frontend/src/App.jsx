@@ -9,6 +9,8 @@ import Footer from "./layouts/Footer";
 import UserNavbar from "./layouts/UserNavbar";
 import AdminNavbar from "./layouts/AdminNavbar";
 import LandingPage from "./pages/LandingPage";
+import DestinationDetails from "./pages/DestinationDetails";
+import Destinations from "./pages/Destinations";
 
 
 const Layout = () => {
@@ -35,6 +37,14 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <LandingPage />,
+      },
+      {
+        path: "/details/:id",
+        element: <DestinationDetails/>
+      },
+      {
+        path: "/destinations",
+        element: <Destinations/>
       },
     ],
   },
