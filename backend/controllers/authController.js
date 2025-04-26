@@ -73,6 +73,15 @@ export const login = async (req, res) => {
 
     // 2) Provjeri postoji li korisnik i da li je password ispravan
     const user = await User.findByEmail(email);
+
+        
+    console.log("Email:", email);
+    console.log("Unesena šifra:", password);
+    console.log("Hash iz baze:", user?.password_hash);
+    const match = await bcrypt.compare(password, user?.password_hash || '');
+    console.log("Da li se šifre poklapaju?", match);
+
+
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({
         status: 'fail',
@@ -80,6 +89,8 @@ export const login = async (req, res) => {
       });
     }
 
+
+    
     // 3) Ako je sve OK, pošalji token klijentu
     const token = signToken(user.id);
 

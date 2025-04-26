@@ -1,77 +1,38 @@
-import {
-  createBrowserRouter,
-  RouterProvider,
-  useLocation,
-  Outlet,
-} from "react-router-dom";
-
+import React from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import UserNavbar from "./layouts/UserNavbar"; 
+import LoggedUser from "./layouts/LoggedUser"; 
 import Footer from "./layouts/Footer";
-import UserNavbar from "./layouts/UserNavbar";
-import AdminNavbar from "./layouts/AdminNavbar";
-import LandingPage from "./pages/LandingPage";
-import DestinationDetails from "./pages/DestinationDetails";
+import Home from "./pages/LandingPage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import ProfilePage from "./pages/ProfilePage";
 import Destinations from "./pages/Destinations";
+import FAQ from "./pages/faq";
+import DestinationDetails from "./pages/DestinationDetails";
 
+const App = () => {
 
-const Layout = () => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column', width: '100%'}}>
-      <UserNavbar />
-      <div style={{
-        flex: 1,
-      }}>
-        <Outlet />
-      </div>
-      <Footer />
-    </div>
+    <Router>
+      {user ? <LoggedUser /> : <UserNavbar />}
+      
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/faq" element={<FAQ/>} />
+        <Route path="destinations" element={<Destinations/>} />
+        <Route path="/details/:id" element={<DestinationDetails/>} />
+      </Routes>
+
+      <Footer/>
+      
+    </Router>
   );
 };
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Layout />,
-    children: [
-      {
-        path: "/",
-        element: <LandingPage />,
-      },
-      {
-        path: "/details/:id",
-        element: <DestinationDetails/>
-      },
-      {
-        path: "/destinations",
-        element: <Destinations/>
-      },
-    ],
-  },
-  /*
-  {
-    path: "/register",
-    element: <Register />,
-  },
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/user/add_user",
-    element: <AddUser />,
-  },
-  */
-]);
-
-function App() {
-  return (
-    <div className="app">
-      <div className="container">
-      <RouterProvider router={router}/>
-      </div>
-    </div>
-  );
-}
 
 export default App;
